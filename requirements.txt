@@ -1,25 +1,45 @@
-# LangChain + ChromaDB dependencies
-langchain==0.3.0
-langchain-community==0.3.0
-langchain-core==0.3.52
-langchain-google-genai==2.0.0
+# # LangChain + ChromaDB dependencies
+# langchain==0.3.0
+# langchain-community==0.3.0
+# langchain-core==0.3.52
+# langchain-google-genai==2.0.0
+# langchain-chroma==0.1.4
+# langchain-huggingface==0.1.0
+
+# # Google + Transformers
+# google-generativeai==0.7.2
+# google-ai-generativelanguage==0.6.6
+# sentence-transformers==3.1.1
+# numpy==1.26.4
+
+# # Vector DB
+# chromadb==0.5.11
+
+# # Flask & server-related
+# flask==3.0.2
+# python-dotenv==1.0.1
+
+# # Pydantic for LangChain schema validation
+# pydantic==2.9.2
+
+# gunicorn==23.0.0
+
+
+
+
+langchain==0.3.1
+langchain-community==0.3.1
+langchain-core==0.3.6
+langchain-google-genai==2.0.1
 langchain-chroma==0.1.4
 langchain-huggingface==0.1.0
-
-# Google + Transformers
-google-generativeai==0.7.2
-google-ai-generativelanguage==0.6.6
+google-generativeai==0.8.3  # Updated to meet langchain-google-genai requirement
+google-ai-generativelanguage==0.6.10  # Updated for compatibility
 sentence-transformers==3.1.1
 numpy==1.26.4
-
-# Vector DB
 chromadb==0.5.11
-
-# Flask & server-related
 flask==3.0.2
+flask-cors==5.0.0
 python-dotenv==1.0.1
-
-# Pydantic for LangChain schema validation
 pydantic==2.9.2
-
 gunicorn==23.0.0
