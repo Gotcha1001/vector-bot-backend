@@ -228,7 +228,8 @@ except Exception as e:
     raise
 
 # Specify Chroma DB path for Render's writable project directory
-chroma_db_path = os.getenv("CHROMA_DB_PATH", "/opt/render/project/chroma_db")
+# Specify Chroma DB path for Render's writable project directory
+chroma_db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
 app.logger.debug(f"Using Chroma DB path: {chroma_db_path}")
 
 # Ensure Chroma DB directory exists and is writable
