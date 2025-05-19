@@ -1,4 +1,4 @@
-# Vector Bot Backend
+# Vector Bot Backend instructions...
 
 A Flask-based backend for the Vector Bot application, using LangChain and Chroma for conversational AI.
 

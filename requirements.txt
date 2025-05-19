@@ -21,3 +21,5 @@ python-dotenv==1.0.1
 
 # Pydantic for LangChain schema validation
 pydantic==2.9.2
+
+gunicorn==23.0.0
