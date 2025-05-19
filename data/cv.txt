@@ -1,0 +1,298 @@
+Wesley Wayne Olivier
+📍 110 Manfred Drive, Park Hills, Durban North, 4051
+📞 078-007-7368 / 083-448-7334
+📧 WesleyOlivier443@gmail.com
+🌐 Portfolio: https://codenow101.com/portfolio | GitHub: https://github.com/Gotcha1001
+🔹 Profile Summary
+Creative and self-driven Frontend Developer with strong foundations in React, Next.js, and Firebase. Passionate about crafting responsive web applications and seamless user experiences. Completed multiple in-depth development bootcamps and deployed over 40 full-stack apps independently. Quick to learn and adapt, with growing skills in backend technologies and a solid grasp of Python and AI engineering. Looking to join a forward-thinking team where I can contribute front-end expertise and continue growing as a full-stack developer.
+🔹 Technical Skills
+• Languages & Frameworks: JavaScript, TypeScript, React, Next.js, Angular, Python
+• Backend: Firebase, ASP.NET Core, MongoDB, Sanity
+• Styling: Tailwind CSS, Bootstrap, Framer Motion
+• Tools: VS Code, Cursor, PyCharm, Postman, Swagger, Git
+• Other: Stripe Integration, Form Validation with Zod, React Hook Form
+🔹 Certifications & Education
+Udemy (2021 – 2024)
+- React – The Complete Guide 2024 (incl. Next.js, Redux) – 68.5 hours
+- The Complete 2024 Web Development Boot Camp – 61.5 hours
+- Full Stack Web Development (React, Python, C#) – In Progress
+- AI Engineering Bootcamp – In Progress
+- ASP.NET & Angular Full-Stack Applications – 50+ hours (combined)
+- C# Intermediate & Advanced – Mosh Hamedani
+
+University of KwaZulu-Natal (UKZN)
+- BPMus Jazz and Popular Music (Honours, 2008)
+- Diploma in Jazz and Popular Music (2004–2007)
+🔹 Projects Portfolio
+• Gig Platform for Musicians – https://gig-restaurant.vercel.app/
+• Cancer Friends Community – https://cancer-friends.vercel.app/
+• Church Community Website – https://church-vite-app-new-firebase-file.vercel.app/
+• E-Commerce (Temu Style) – https://sonny-ecommerce.vercel.app/
+• Instagram Clone – https://instagram-fun-mauve.vercel.app/
+• Pizza Ordering App – https://food-ordering-pizza-six.vercel.app/
+*... and many more at: https://codenow101.com/portfolio*
+🔹 Work Experience
+Freelance Web Developer (2021 – Present)
+- Designed and deployed over 40 personal and client web apps
+- Managed hosting, deployment (Firebase, Vercel), UI/UX, and user authentication
+- Regularly worked with AI tools (ChatGPT, Claude) to optimize productivity and solutions
+
+Music Educator & Performer (2009 – 2022)
+- Taught piano, keyboard, and drums at school and private levels
+- Designed music curricula and performed at public & corporate events
+🔹 Additional Information
+- Grade 4 Piano – UNISA
+- TEFL Level 5 Certificate – 168 hours
+- Fluent with modern developer tools: Cursor, VS Code, PyCharm
+🔹 References
+Susan Greer
+HR Manager, St Mary’s Diocesan School for Girls, Kloof
+📞 076-407-8773
+
+Address: 110 Manfred Drive
+Park Hills , Durban North, 4051
+Cell: 078-0077368 / 083-4487334
+Email: WesleyOlivier443@gmail.com
+GitHub: https://github.com/Gotcha1001
+Portfolio: https://codenow101.com/portfolio
+Personal Details
+- Date of Birth: 22 January 1982
+- Marital Status: Single
+- ID Number: 820122 5120 084
+Certifications & Qualifications
+Programming Courses (2021-2024)
+
+- React – The Complete Guide 2024 (incl. Next.js, Redux)
+  Udemy | Lecturer: Maximilian Schwarzmüller | 68.5 hours
+
+- The Complete 2024 Web Development Boot Camp
+  Udemy | Lecturer: Dr. Angela Yu | 61.5 hours
+
+- Build an App with ASP.Net Core and Angular from Scratch
+  Udemy | Lecturer: Neil Cummings | 35.5 hours
+- Angular and Asp.Net Core Rest API – Real World Application
+  Udemy | Lecturer: Sammeer Saini | 21.5 hours
+
+- C# Advanced Topics: Prepare for Technical Interviews
+  Udemy | Lecturer: Mosh Hamedani | 3 hours
+
+- C# Intermediate: Classes, Interfaces, and OOP
+  Udemy | Lecturer: Mosh Hamedani | 6 hours
+
+- Beginners: Learn C# Fundamentals by Coding
+  Udemy | Lecturer: Mosh Hamedani | 5.5 hours
+
+TEFL Courses (2020)
+- The TEFL Academy (RQF) – Level 5 Certificate in Teaching English as a Foreign Language (168 hours)
+  Qualification Number: 603/3835/0
+- Teaching English Online and One-to-One Course (30 hours)
+
+Academic Qualifications
+
+University of KwaZulu-Natal (UKZN)
+- BPMus Jazz and Popular Music (Honours) (2008)
+- Diploma in Jazz and Popular Music (2004-2007, incl. Foundation Year)
+Subjects: Performance, Electro-Acoustics, Improvisation, Piano, Harmony, Arranging
+South Peninsula College
+- National Senior Certificate (2000)
+- National Intermediate Certificate (1999)
+Subjects: English, Afrikaans, Office Practice, Information Processing, Computer Practice, Small Business Management
+Professional Experience
+Freelance Web Developer (2021 - Present)
+- Independently developed and deployed 30+ websites for clients
+
+Key Projects
+
+
+- Bands and Gig Providers Platform
+  - Built a platform connecting musicians and event organizers
+  - Responsive UI with Tailwind CSS and Framer Motion
+ - Used Zod for validation and React Hook Form for managing form data and Typescript
+    - View Project :  https://gig-restaurant.vercel.app/
+
+- Cancer Friends Social Media Website
+  - View Project: https://cancer-friends.vercel.app/
+  - Built with Firebase to support connections among cancer survivors.
+
+- Church Website
+  - View Project : https://church-vite-app-new-firebase-file.vercel.app/
+  - Developed for a church community with Firebase integration.
+
+- Art Portfolio
+  - View Project :  https://josh-art-site.vercel.app/
+  - Created an online portfolio for an artist to showcase their work and attract clients.
+
+- Slimming Products Website
+  - View Project : https://slimming-products-code.vercel.app/
+  - Designed an e-commerce platform for a slimming products business.
+
+- E-Commerce Platform
+  - View Project “  https://ecommerce-4-nextjs-front1.vercel.app/
+  - Built a modern e-commerce solution with a sleek UI.
+
+- Temu Variation (E-Commerce)
+-Integrated payment processing (Stripe, PayFast)
+  - View Project : https://sonny-ecommerce.vercel.app/
+  - A functional e-commerce variation inspired by Temu.
+
+- Pizza Ordering App
+  - View Project : https://food-ordering-pizza-six.vercel.app/
+  - Created a user-friendly interface for ordering pizzas online.
+
+- Instagram Replica
+  - View Project: https://instagram-fun-mauve.vercel.app/
+  - Built a functional Instagram-like social media platform.
+
+- Facebook Replica
+  - View Project : https://social-media-art.vercel.app/
+  - Developed a Facebook-inspired social platform.
+
+- Expense Tracker
+  - View Project : https://finance-track-wine.vercel.app/sign-in
+  - Built to help users manage their personal finances.
+
+- Blog Post Platform
+  - View Project : https://secret-blogpost.web.app/
+  - A simple and interactive blog posting platform.
+
+- Laughter Coaching Website
+  - View Project : https://laughter-now.vercel.app/
+  - Designed for a coach to attract clients through a user-friendly interface.
+
+Music Specialist (2009 – 2022 )
+- Designed and implemented music curricula for grades 6-12
+- Taught piano, keyboard, and drums professionally
+Technical Skills
+- Frontend: React, Angular, NextJS, JavaScript, TypeScript, Tailwind CSS, Bootstrap
+- Backend: ASP.NET Core, C#
+- Databases: MongoDB, Firebase, Sanity
+- Tools: VS Code, Visual Studio, Swagger, Postman
+General & Interests
+- Grade 4 Piano (UNISA) | Drums (1-year lessons, proficient in notation)
+- Taught and performed music at corporate and private events
+References
+Susan Greer
+HR Manager, St Mary’s Diocesan School for Girls, Kloof
+Phone: 076-407-8773
+
+Wesley Wayne Olivier
+TEL: +27 (0) 0780077368 EMAIL:  Wesleyolivier443@gmail.com
+ADDRESS:  110 Manfred Drive, Park Hills, Durban North, South Africa, 4051
+
+TEFL TRAINING
+
+August 2020 – September 2020     Teaching English Online and one to one course (30 hours)
+
+				     Assignment: Achieved 100 percent designing a 5 week online  				     course for a specific individuals needs
+
+May 2020 – August 2020          Level 5 TEFL Certificate - The TEFL Academy, UK
+			          Course included:
+          -  Creating lessons and teaching materials for a range of levels from
+             Elementary to Advanced
+         - Teaching speaking, listening, reading and writing
+ 		                       - Material & resource creation, utilising the internet
+                                                    - Needs analysis and teaching in different situations
+                                            - Classroom management and teaching techniques
+			        - Language analysis – vocabulary, grammar and pronunciation
+
+EDUCATION AND COURSES
+
+1999 – SOUTH PENINSULA COLLEGE
+            National Intermediate Certificate
+
+2000 – SOUTH PENINSULA COLLEGE
+            National Senior Certificate
+
+SUBJECTS:
+
+            English 1st Language
+           Afrikaans 2nd Language
+           Office Practice
+           Information Processing
+           Computer Practice
+           Small Business Management
+
+2004 – 2007 UKZN (University of Kwa-Zulu Natal) Howard Campus
+	Diploma in Jazz and Popular music (4 years including 1 year foundation course)
+SUBJECTS: Rhythm
+	   Aural Perception
+	   Ensemble
+	   Improvisation
+	   Harmony
+	   Arranging
+	   First Practical Study (Piano)
+	   English
+	   Keyboard tech
+
+2008 - UKZN (University of Kwa-Zulu Natal) Howard Campus
+	BMus Jazz and popular music (Bachelor of practical music), Honours Degree
+SUBJECTS: Performance
+	   Electro acoustics (Sound Engineering)
+
+Golden Key International Honours Society
+On my academic achievement at UKZN I qualified to be a member of the Golden Key International Honours Society (An International Recognition)
+RELEVANT EXPERIENCE
+
+I have been teaching in a Primary School for 14 years, as the Music Director or Specialist.  I have had experience with children from the ages of 5 to 13.  I have taught grade R’s to Grade 7.  I have had experience in teaching music theory as well as practicals.  Designing tests and exams and marking for the relevant grading in our Creative Arts Department.  I also have had experience with working with our Drama department designing the annual School play and concerts.  I have designed presentations in song format for mother’s day, father’s day and all special public holidays of the year, where the children sing and present the actions they have learnt.
+
+EMPLOYMENT
+
+2009 – 2020 Durban School: Music Specialist
+* Teaching, both Music Theory and Practice to students from Grade R to Grade 7.
+* Teaching choir once or twice a week (depending on performances needed)
+* Playing at all school functions as a cocktail pianist in events including Prize Givings, School Assemblies, Gala Evenings (School Birthday Formal Functions), plays etc. . . .
+* Writing and performing original pieces for various school plays and special assemblies.
+2002 – 2007 CD Warehouse, Gateway shopping mall:
+DUTIES – selling CD's, operating the till, sealing the stock, packing and repacking them out onto the shelves and placing orders, keeping up to date with all the latest music, dealing with demanding and particular customers.
+2002 – Worked at Beds for Africa Warehouse
+	  In Malacca Road in Red Hill
+
+DUTIES –    Took stock of all the beds and wood furniture. Capture all the invoices of stock leaving and stock arriving at the warehouse. I also received stock from the companies and moved and packed and made sure the GRCS were taken care of and that it was all neat and tidy
+
+2002 – Standard Bank Assessors Home Loans Department in Greyville, Durban
+
+DUTIES - 	First a capturer and then a clerk
+
+2001 – Zimbabalula (Zimbabwe clothes goods)
+Noordhoek Farm Village, Cape Town
+
+DUTIES – Ran the shop completely, stock, till, credit (Manager)
+
+1997 – Spargies
+	Fish Hoek Main Rd
+
+DUTIES – Take aways and delivery orders on the telephone
+
+HOBBIES/INTERESTS
+I have travelled extensively within South Africa. I enjoy meeting new people and experiencing different cultures.
+
+Music is a real passion and I play piano and write my own compositions using Music Making Software like Ableton and Protools, I have my own Utube account with all my songs I have created. I also really enjoy being creative with painting and cooking. I enjoy nature and hiking.
+
+PERSONAL DETAILS
+
+Date of Birth: 22 January 1982
+Marital Status:  Single
+Health:  Excellent
+Nationality: South African
+Clean full driving licence
+
+Personal Motto:
+All things of value come from good values.
+
+
+TESTIMONIALS:
+
+1.	Patience Buthelezi
+Department of Education
+Chief Inspector
+0827457621
+Reference
+
+2.	Susan Greer
+HR Manager
+St Mary’s Diocesan School for girls
+Kloof
+0764078773
+
+
+

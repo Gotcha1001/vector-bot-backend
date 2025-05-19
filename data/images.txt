@@ -1,0 +1,10 @@
+Wesley in a black and white portrait, artistic, monochrome: /static/images/black.jpg
+Wesley as a young man, youthful, blonde: /static/images/blonde.png
+Wesley in his car, adventurous, travel, driving: /static/images/car.jpg
+Wesley programming, coding, focused, elf: /static/images/elf.jpg
+Wesley in a retro style, young, hippy, vintage: /static/images/Hippy.jpg
+Wesley in his favorite jacket, stylish, casual, fashion: /static/images/jacket.jpg
+Wesley in a conservative look, professional, formal: /static/images/me.jpg
+Wesley playing piano, music, composition, pianist: /static/images/piano.jpg
+Wesley in his lounge, relaxed, home, casual: /static/images/shower.jpg
+Wesley in a suit, dapper, professional, business: /static/images/smart.jpg
