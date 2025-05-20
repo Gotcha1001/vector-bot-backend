@@ -78,7 +78,6 @@
 # print("Vector store created successfully.")
 
 
-
 import os
 import logging
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
@@ -91,10 +90,12 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def create_vector_store():
-    chroma_db_path = os.getenv("CHROMA_DB_PATH", "/app/chroma_db")
-    data_path = "/app/data"
+    # Use Render's project root
+    project_root = "/opt/render/project/src"
+    chroma_db_path = os.getenv("CHROMA_DB_PATH", os.path.join(project_root, "chroma_db"))
+    data_path = os.path.join(project_root, "data")
     logger.debug(f"Working directory: {os.getcwd()}")
-    logger.debug(f"Root directory contents: {os.listdir('/app')}")
+    logger.debug(f"Project root contents: {os.listdir(project_root)}")
     logger.debug(f"Resolved Chroma DB path: {os.path.abspath(chroma_db_path)}")
     logger.debug(f"Resolved data path: {os.path.abspath(data_path)}")
     

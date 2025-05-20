@@ -241,8 +241,9 @@ except Exception as e:
     raise
 app.logger.info(f"Memory usage after embeddings: {psutil.virtual_memory().percent}%")
 
-# Specify Chroma DB path using an absolute path
-chroma_db_path = os.getenv("CHROMA_DB_PATH", "/app/chroma_db")
+# Specify Chroma DB path using Render's project root
+project_root = "/opt/render/project/src"
+chroma_db_path = os.getenv("CHROMA_DB_PATH", os.path.join(project_root, "chroma_db"))
 app.logger.debug(f"Resolved Chroma DB path: {os.path.abspath(chroma_db_path)}")
 
 # Initialize Chroma DB
@@ -431,12 +432,22 @@ def index():
 def debug():
     return jsonify({
         'cwd': os.getcwd(),
-        'chroma_path': os.path.abspath('/app/chroma_db'),
-        'chroma_exists': os.path.exists('/app/chroma_db'),
-        'chroma_file_exists': os.path.exists('/app/chroma_db/chroma.sqlite3'),
-        'data_path': os.path.abspath('/app/data'),
-        'data_exists': os.path.exists('/app/data')
+        'chroma_path': os.path.abspath(os.path.join(project_root, 'chroma_db')),
+        'chroma_exists': os.path.exists(os.path.join(project_root, 'chroma_db')),
+        'chroma_file_exists': os.path.exists(os.path.join(project_root, 'chroma_db', 'chroma.sqlite3')),
+        'data_path': os.path.abspath(os.path.join(project_root, 'data')),
+        'data_exists': os.path.exists(os.path.join(project_root, 'data')),
+        'root_contents': os.listdir(project_root)
     })
+
+@app.route('/data-files')
+def data_files():
+    data_path = os.path.join(project_root, "data")
+    try:
+        files = os.listdir(data_path)
+        return jsonify({"data_files": files})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/memory')
 def memory():
