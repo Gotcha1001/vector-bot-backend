@@ -198,6 +198,7 @@ import os
 import time
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
+from flask_session import Session
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
@@ -205,6 +206,7 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
+import psutil
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -216,51 +218,67 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://vector-bot-frontend.vercel.app"]}})
 app.config["DEBUG"] = True
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+if not os.path.exists('/tmp/flask_session'):
+    os.makedirs('/tmp/flask_session')
+    app.logger.debug("Created /tmp/flask_session directory")
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
+Session(app)
 app.logger.setLevel(logging.DEBUG)
+
+# Log memory usage
+app.logger.info(f"Memory usage before initialization: {psutil.virtual_memory().percent}%")
 
 # Load embeddings
 app.logger.debug("Loading HuggingFace embeddings...")
+start_time = time.time()
 try:
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-MiniLM-L3-v2")
+    app.logger.debug(f"Embeddings loaded in {time.time() - start_time:.2f} seconds")
 except Exception as e:
     app.logger.error(f"Failed to load embeddings: {str(e)}", exc_info=True)
     raise
+app.logger.info(f"Memory usage after embeddings: {psutil.virtual_memory().percent}%")
 
 # Specify Chroma DB path using a relative path
-chroma_db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
-app.logger.debug(f"Using Chroma DB path: {chroma_db_path}")
-
-# Check if the Chroma DB directory exists
+chroma_db_path = os.getenv("CHROMA_DB_PATH", "../chroma_db")
+app.logger.debug(f"Resolved Chroma DB path: {os.path.abspath(chroma_db_path)}")
 if not os.path.exists(chroma_db_path):
     app.logger.error(f"Chroma DB path {chroma_db_path} does not exist")
     raise FileNotFoundError(f"Chroma DB path {chroma_db_path} does not exist")
 
 # Initialize Chroma DB with the existing directory
+app.logger.debug("Initializing Chroma DB...")
+start_time = time.time()
 try:
     vectorstore = Chroma(persist_directory=chroma_db_path, embedding_function=embeddings)
+    app.logger.debug(f"Chroma DB initialized in {time.time() - start_time:.2f} seconds")
 except Exception as e:
     app.logger.error(f"Failed to initialize Chroma DB at {chroma_db_path}: {str(e)}", exc_info=True)
     raise
+app.logger.info(f"Memory usage after Chroma DB: {psutil.virtual_memory().percent}%")
 
 # Initialize LLM with timeout
 app.logger.debug("Initializing Gemini LLM...")
+start_time = time.time()
 try:
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
         temperature=0.7,
         google_api_key=os.getenv("GOOGLE_API_KEY"),
         max_retries=3,
-        timeout=30  # 30-second timeout
+        timeout=90
     )
+    app.logger.debug(f"LLM initialized in {time.time() - start_time:.2f} seconds")
 except Exception as e:
     app.logger.error(f"Failed to initialize LLM: {str(e)}", exc_info=True)
     raise
 
 # Set up memory and retriever
 app.logger.debug("Setting up memory and retriever...")
-memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
-retriever = vectorstore.as_retriever(search_kwargs={"k": 1})  # Reduced k for performance
+memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True, output_key='answer')
+retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
 
 # Define prompt template
 prompt_template = """
@@ -271,7 +289,7 @@ You are a friendly personal assistant with detailed knowledge about Wesley based
 2. **Qualifications and Education**: Use 'cv.txt' for qualifications or education.
 3. **Skills and Work Experience**: Use 'cv.txt' and 'work.txt' for skills or experience.
 4. **Image Queries**: Select the most relevant image from 'images.txt'.
-5. **Hobbies and Activities**: Use 'hobbies.txt', 'music.txt', or 'personal.txt'.
+5. **Hobbies and Activities**: Use 'hobbies.txt', 'music.txt', or 'certificates.txt'.
 6. **Tone and Style**: Speak fondly of Wesley, keep responses concise (2–3 sentences), and avoid speculation.
 
 ### Chat History:
@@ -307,7 +325,7 @@ def health():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    total_start = time.time()  # Start measuring total request time
+    total_start = time.time()
     try:
         app.logger.debug("Received /chat request")
         question = request.json.get('question', '')
@@ -381,7 +399,6 @@ def chat():
         if image_url:
             response['image_url'] = image_url
 
-        # Log total time for the request
         total_time = time.time() - total_start
         app.logger.info(f"Total time for /chat request: {total_time:.2f} seconds")
         app.logger.debug(f"Returning response: {response}")
@@ -407,6 +424,20 @@ def clear_session():
 def index():
     app.logger.debug("Root endpoint called")
     return jsonify({'message': 'Welcome to Vector Bot Backend. Use /chat for queries.'}), 200
+
+@app.route('/debug')
+def debug():
+    return jsonify({
+        'cwd': os.getcwd(),
+        'chroma_path': os.path.abspath('../chroma_db'),
+        'chroma_exists': os.path.exists('../chroma_db'),
+        'data_path': os.path.abspath('../data'),
+        'data_exists': os.path.exists('../data')
+    })
+
+@app.route('/memory')
+def memory():
+    return jsonify({'memory_percent': psutil.virtual_memory().percent})
 
 if __name__ == '__main__':
     port = int(os.getenv("PORT", 5000))
