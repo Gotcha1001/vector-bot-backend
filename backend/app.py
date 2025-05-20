@@ -234,7 +234,10 @@ app.logger.info(f"Memory usage before initialization: {psutil.virtual_memory().p
 app.logger.debug("Loading HuggingFace embeddings...")
 start_time = time.time()
 try:
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-MiniLM-L3-v2")
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/paraphrase-MiniLM-L3-v2",
+        model_kwargs={"device": "cpu"}
+    )
     app.logger.debug(f"Embeddings loaded in {time.time() - start_time:.2f} seconds")
 except Exception as e:
     app.logger.error(f"Failed to load embeddings: {str(e)}", exc_info=True)
@@ -251,12 +254,14 @@ app.logger.debug("Initializing Chroma DB...")
 start_time = time.time()
 try:
     os.makedirs(chroma_db_path, exist_ok=True)  # Ensure directory exists
+    os.environ["ANONYMIZED_TELEMETRY"] = "False"  # Disable telemetry
     vectorstore = Chroma(persist_directory=chroma_db_path, embedding_function=embeddings)
     app.logger.debug(f"Chroma DB initialized in {time.time() - start_time:.2f} seconds")
     if os.path.exists(os.path.join(chroma_db_path, "chroma.sqlite3")):
         app.logger.info("Chroma DB file found")
     else:
-        app.logger.warning("Chroma DB file not found, may be created on first use")
+        app.logger.error("Chroma DB file not found")
+        raise FileNotFoundError("Chroma DB file not found")
 except Exception as e:
     app.logger.error(f"Failed to initialize Chroma DB at {chroma_db_path}: {str(e)}", exc_info=True)
     raise
@@ -452,6 +457,13 @@ def data_files():
 @app.route('/memory')
 def memory():
     return jsonify({'memory_percent': psutil.virtual_memory().percent})
+
+@app.route('/disk')
+def disk():
+    stat = os.statvfs('/')
+    total = stat.f_frsize * stat.f_blocks
+    free = stat.f_frsize * stat.f_bavail
+    return jsonify({"total_bytes": total, "free_bytes": free})
 
 if __name__ == '__main__':
     port = int(os.getenv("PORT", 5000))

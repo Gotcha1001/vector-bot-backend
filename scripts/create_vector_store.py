@@ -90,8 +90,8 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def create_vector_store():
-    # Use Render's project root
-    project_root = "/opt/render/project/src"
+    # Use local project root
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     chroma_db_path = os.getenv("CHROMA_DB_PATH", os.path.join(project_root, "chroma_db"))
     data_path = os.path.join(project_root, "data")
     logger.debug(f"Working directory: {os.getcwd()}")
@@ -161,7 +161,10 @@ def create_vector_store():
     # Create embeddings
     logger.debug("Creating embeddings...")
     try:
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-MiniLM-L3-v2")
+        embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/paraphrase-MiniLM-L3-v2",
+            model_kwargs={"device": "cpu"}
+        )
         logger.debug("Embeddings loaded")
     except Exception as e:
         logger.error(f"Failed to load embeddings: {str(e)}", exc_info=True)
@@ -171,6 +174,7 @@ def create_vector_store():
     logger.debug(f"Creating vector store at {os.path.abspath(chroma_db_path)}...")
     try:
         os.makedirs(chroma_db_path, exist_ok=True)  # Ensure directory exists
+        os.environ["ANONYMIZED_TELEMETRY"] = "False"  # Disable telemetry
         vectorstore = Chroma.from_documents(chunks, embedding=embeddings, persist_directory=chroma_db_path)
         logger.info(f"Vector store created successfully at {os.path.abspath(chroma_db_path)}")
         if os.path.exists(os.path.join(chroma_db_path, "chroma.sqlite3")):
