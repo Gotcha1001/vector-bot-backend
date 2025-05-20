@@ -244,24 +244,24 @@ except Exception as e:
     raise
 app.logger.info(f"Memory usage after embeddings: {psutil.virtual_memory().percent}%")
 
-# Specify Chroma DB path using Render's project root
-project_root = "/opt/render/project/src"
+# Specify Chroma DB path using dynamic project root
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 chroma_db_path = os.getenv("CHROMA_DB_PATH", os.path.join(project_root, "chroma_db"))
 app.logger.debug(f"Resolved Chroma DB path: {os.path.abspath(chroma_db_path)}")
+
+# Check if Chroma DB file exists
+chroma_db_file = os.path.join(chroma_db_path, "chroma.sqlite3")
+if not os.path.exists(chroma_db_file):
+    app.logger.error(f"Chroma DB file not found at {chroma_db_file}")
+    raise FileNotFoundError(f"Chroma DB file not found at {chroma_db_file}")
 
 # Initialize Chroma DB
 app.logger.debug("Initializing Chroma DB...")
 start_time = time.time()
 try:
-    os.makedirs(chroma_db_path, exist_ok=True)  # Ensure directory exists
     os.environ["ANONYMIZED_TELEMETRY"] = "False"  # Disable telemetry
     vectorstore = Chroma(persist_directory=chroma_db_path, embedding_function=embeddings)
     app.logger.debug(f"Chroma DB initialized in {time.time() - start_time:.2f} seconds")
-    if os.path.exists(os.path.join(chroma_db_path, "chroma.sqlite3")):
-        app.logger.info("Chroma DB file found")
-    else:
-        app.logger.error("Chroma DB file not found")
-        raise FileNotFoundError("Chroma DB file not found")
 except Exception as e:
     app.logger.error(f"Failed to initialize Chroma DB at {chroma_db_path}: {str(e)}", exc_info=True)
     raise
