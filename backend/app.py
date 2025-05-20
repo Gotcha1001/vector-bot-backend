@@ -212,8 +212,7 @@
 
 
 
-
-
+#NO LOGS IN RENDER 
 import logging
 import os
 import time
