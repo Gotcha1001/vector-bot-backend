@@ -227,25 +227,16 @@ except Exception as e:
     app.logger.error(f"Failed to load embeddings: {str(e)}", exc_info=True)
     raise
 
-# Specify Chroma DB path for Render's writable project directory
-# Specify Chroma DB path for Render's writable project directory
+# Specify Chroma DB path using a relative path
 chroma_db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
 app.logger.debug(f"Using Chroma DB path: {chroma_db_path}")
 
-# Ensure Chroma DB directory exists and is writable
-try:
-    if not os.path.exists(chroma_db_path):
-        app.logger.debug(f"Creating directory {chroma_db_path}")
-        os.makedirs(chroma_db_path, exist_ok=True)
-    if not os.access(chroma_db_path, os.W_OK):
-        app.logger.error(f"Chroma DB path {chroma_db_path} is not writable")
-        raise PermissionError(f"Cannot write to {chroma_db_path}")
-    app.logger.debug(f"Chroma DB path {chroma_db_path} is writable")
-except Exception as e:
-    app.logger.error(f"Failed to set up Chroma DB directory {chroma_db_path}: {str(e)}", exc_info=True)
-    raise
+# Check if the Chroma DB directory exists
+if not os.path.exists(chroma_db_path):
+    app.logger.error(f"Chroma DB path {chroma_db_path} does not exist")
+    raise FileNotFoundError(f"Chroma DB path {chroma_db_path} does not exist")
 
-# Initialize Chroma DB
+# Initialize Chroma DB with the existing directory
 try:
     vectorstore = Chroma(persist_directory=chroma_db_path, embedding_function=embeddings)
 except Exception as e:
