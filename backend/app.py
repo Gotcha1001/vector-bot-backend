@@ -307,7 +307,7 @@ def health():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    start_time = time.time()
+    total_start = time.time()  # Start measuring total request time
     try:
         app.logger.debug("Received /chat request")
         question = request.json.get('question', '')
@@ -325,14 +325,21 @@ def chat():
             session.clear()
             session['used_images'] = []
 
+        # Document retrieval with timing
         app.logger.debug(f"Retrieving documents for question: {question}")
+        retrieval_start = time.time()
         docs = retriever.invoke(question)
-        app.logger.info(f"Retrieved {len(docs)} documents in {time.time() - start_time:.2f}s")
+        retrieval_time = time.time() - retrieval_start
+        app.logger.info(f"Retrieved {len(docs)} documents in {retrieval_time:.2f} seconds")
 
+        # Conversation chain invocation with timing
         app.logger.debug("Invoking conversation chain...")
+        chain_start = time.time()
         result = conversation_chain.invoke({"question": question})
+        chain_time = time.time() - chain_start
+        app.logger.info(f"Conversation chain invocation took {chain_time:.2f} seconds")
         answer = result.get('answer', 'Sorry, I couldn’t find an answer.')
-        app.logger.info(f"Answer generated in {time.time() - start_time:.2f}s: {answer[:100]}...")
+        app.logger.debug(f"Generated answer: {answer[:100]}...")
 
         image_url = None
         if "image" in question.lower() or "picture" in question.lower():
@@ -373,10 +380,15 @@ def chat():
         response = {'answer': answer}
         if image_url:
             response['image_url'] = image_url
-        app.logger.debug(f"Returning response in {time.time() - start_time:.2f}s: {response}")
+
+        # Log total time for the request
+        total_time = time.time() - total_start
+        app.logger.info(f"Total time for /chat request: {total_time:.2f} seconds")
+        app.logger.debug(f"Returning response: {response}")
         return jsonify(response)
     except Exception as e:
-        app.logger.error(f"Error in /chat after {time.time() - start_time:.2f}s: {str(e)}", exc_info=True)
+        total_time = time.time() - total_start
+        app.logger.error(f"Error in /chat after {total_time:.2f} seconds: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/clear-session', methods=['GET'])
@@ -385,10 +397,10 @@ def clear_session():
     try:
         app.logger.debug("Clearing session")
         session.clear()
-        app.logger.debug(f"Session cleared in {time.time() - start_time:.2f}s")
+        app.logger.debug(f"Session cleared in {time.time() - start_time:.2f} seconds")
         return jsonify({'message': 'Session cleared'})
     except Exception as e:
-        app.logger.error(f"Error in /clear-session after {time.time() - start_time:.2f}s: {str(e)}", exc_info=True)
+        app.logger.error(f"Error in /clear-session after {time.time() - start_time:.2f} seconds: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/')
