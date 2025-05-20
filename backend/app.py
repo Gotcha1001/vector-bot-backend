@@ -196,10 +196,8 @@
 import logging
 import os
 import time
-import psutil
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
-from flask_session import Session
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
@@ -209,8 +207,7 @@ from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s:%(name)s: %(message)s')
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
 load_dotenv()
@@ -219,82 +216,51 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://vector-bot-frontend.vercel.app"]}})
 app.config["DEBUG"] = True
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
-if not os.path.exists('/tmp/flask_session'):
-    os.makedirs('/tmp/flask_session')
-    logger.debug("Created /tmp/flask_session directory")
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
-Session(app)
-logger.setLevel(logging.DEBUG)
-
-# Log memory usage before initialization
-logger.info(f"Memory usage before initialization: {psutil.virtual_memory().percent}%")
+app.logger.setLevel(logging.DEBUG)
 
 # Load embeddings
-logger.debug("Loading HuggingFace embeddings...")
-start_time = time.time()
+app.logger.debug("Loading HuggingFace embeddings...")
 try:
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/paraphrase-MiniLM-L3-v2",
-        model_kwargs={"device": "cpu"}
-    )
-    logger.debug(f"Embeddings loaded in {time.time() - start_time:.2f} seconds")
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-MiniLM-L3-v2")
 except Exception as e:
-    logger.error(f"Failed to load embeddings: {str(e)}", exc_info=True)
+    app.logger.error(f"Failed to load embeddings: {str(e)}", exc_info=True)
     raise
-logger.info(f"Memory usage after embeddings: {psutil.virtual_memory().percent}%")
 
-# Specify Chroma DB path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-chroma_db_path = os.getenv("CHROMA_DB_PATH", os.path.join(project_root, "chroma_db"))
-logger.debug(f"Resolved Chroma DB path: {os.path.abspath(chroma_db_path)}")
+# Specify Chroma DB path using a relative path
+chroma_db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
+app.logger.debug(f"Using Chroma DB path: {chroma_db_path}")
 
-# Check if Chroma DB file exists
-chroma_db_file = os.path.join(chroma_db_path, "chroma.sqlite3")
-if not os.path.exists(chroma_db_file):
-    logger.error(f"Chroma DB file not found at {chroma_db_file}")
-    raise FileNotFoundError(f"Chroma DB file not found at {chroma_db_file}")
+# Check if the Chroma DB directory exists
+if not os.path.exists(chroma_db_path):
+    app.logger.error(f"Chroma DB path {chroma_db_path} does not exist")
+    raise FileNotFoundError(f"Chroma DB path {chroma_db_path} does not exist")
 
-# Initialize Chroma DB
-logger.debug("Initializing Chroma DB...")
-start_time = time.time()
+# Initialize Chroma DB with the existing directory
 try:
-    os.environ["ANONYMIZED_TELEMETRY"] = "False"
     vectorstore = Chroma(persist_directory=chroma_db_path, embedding_function=embeddings)
-    logger.debug(f"Chroma DB initialized in {time.time() - start_time:.2f} seconds")
 except Exception as e:
-    logger.error(f"Failed to initialize Chroma DB at {chroma_db_path}: {str(e)}", exc_info=True)
+    app.logger.error(f"Failed to initialize Chroma DB at {chroma_db_path}: {str(e)}", exc_info=True)
     raise
-logger.info(f"Memory usage after Chroma DB: {psutil.virtual_memory().percent}%")
 
-# Initialize LLM
-logger.debug("Initializing Gemini LLM...")
-start_time = time.time()
+# Initialize LLM with timeout
+app.logger.debug("Initializing Gemini LLM...")
 try:
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
         temperature=0.7,
         google_api_key=os.getenv("GOOGLE_API_KEY"),
         max_retries=3,
-        timeout=90
+        timeout=30  # 30-second timeout
     )
-    logger.debug(f"LLM initialized in {time.time() - start_time:.2f} seconds")
 except Exception as e:
-    logger.error(f"Failed to initialize LLM: {str(e)}", exc_info=True)
+    app.logger.error(f"Failed to initialize LLM: {str(e)}", exc_info=True)
     raise
-logger.info(f"Memory usage after LLM: {psutil.virtual_memory().percent}%")
 
 # Set up memory and retriever
-logger.debug("Setting up memory and retriever...")
-start_time = time.time()
-try:
-    memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True, output_key='answer')
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
-    logger.debug(f"Memory and retriever set up in {time.time() - start_time:.2f} seconds")
-except Exception as e:
-    logger.error(f"Failed to set up memory and retriever: {str(e)}", exc_info=True)
-    raise
+app.logger.debug("Setting up memory and retriever...")
+memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+retriever = vectorstore.as_retriever(search_kwargs={"k": 1})  # Reduced k for performance
 
 # Define prompt template
 prompt_template = """
@@ -305,7 +271,7 @@ You are a friendly personal assistant with detailed knowledge about Wesley based
 2. **Qualifications and Education**: Use 'cv.txt' for qualifications or education.
 3. **Skills and Work Experience**: Use 'cv.txt' and 'work.txt' for skills or experience.
 4. **Image Queries**: Select the most relevant image from 'images.txt'.
-5. **Hobbies and Activities**: Use 'hobbies.txt', 'music.txt', or 'certificates.txt'.
+5. **Hobbies and Activities**: Use 'hobbies.txt', 'music.txt', or 'personal.txt'.
 6. **Tone and Style**: Speak fondly of Wesley, keep responses concise (2–3 sentences), and avoid speculation.
 
 ### Chat History:
@@ -319,208 +285,117 @@ You are a friendly personal assistant with detailed knowledge about Wesley based
 
 ### Answer:
 """
-logger.debug("Creating prompt template...")
-try:
-    prompt = PromptTemplate(
-        template=prompt_template,
-        input_variables=["chat_history", "context", "question"]
-    )
-    logger.debug("Prompt template created")
-except Exception as e:
-    logger.error(f"Failed to create prompt template: {str(e)}", exc_info=True)
-    raise
+prompt = PromptTemplate(
+    template=prompt_template,
+    input_variables=["chat_history", "context", "question"]
+)
 
 # Create conversational chain
-logger.debug("Creating conversational chain...")
-start_time = time.time()
-try:
-    conversation_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=retriever,
-        memory=memory,
-        return_source_documents=False,
-        combine_docs_chain_kwargs={"prompt": prompt}
-    )
-    logger.debug(f"Conversational chain created in {time.time() - start_time:.2f} seconds")
-except Exception as e:
-    logger.error(f"Failed to create conversational chain: {str(e)}", exc_info=True)
-    raise
+app.logger.debug("Creating conversational chain...")
+conversation_chain = ConversationalRetrievalChain.from_llm(
+    llm=llm,
+    retriever=retriever,
+    memory=memory,
+    return_source_documents=False,
+    combine_docs_chain_kwargs={"prompt": prompt}
+)
 
 @app.route('/health')
 def health():
-    logger.debug("Health check endpoint called")
+    app.logger.debug("Health check endpoint called")
     return jsonify({'status': 'ok'}), 200
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    total_start = time.time()
-    logger.debug(f"Received /chat request with headers: {request.headers}")
-    logger.debug(f"Request JSON: {request.json}")
-    
+    start_time = time.time()
     try:
+        app.logger.debug("Received /chat request")
         question = request.json.get('question', '')
-        logger.debug(f"Question received: {question}")
+        app.logger.debug(f"Question: {question}")
         if not question:
-            logger.warning("No question provided in request")
+            app.logger.warning("No question provided")
             return jsonify({'error': 'No question provided'}), 400
 
-        # Session initialization
-        logger.debug("Checking session for used_images")
-        start_time = time.time()
         try:
             if 'used_images' not in session:
-                logger.debug("Initializing session.used_images")
+                app.logger.debug("Initializing session.used_images")
                 session['used_images'] = []
-            logger.debug(f"Session check completed in {time.time() - start_time:.2f} seconds")
         except Exception as e:
-            logger.error(f"Session initialization error: {str(e)}", exc_info=True)
+            app.logger.error(f"Session initialization error: {str(e)}", exc_info=True)
             session.clear()
             session['used_images'] = []
-            logger.debug("Session cleared and reinitialized")
 
-        # Document retrieval
-        logger.debug(f"Retrieving documents for question: {question}")
-        retrieval_start = time.time()
-        try:
-            docs = retriever.invoke(question)
-            retrieval_time = time.time() - retrieval_start
-            logger.info(f"Retrieved {len(docs)} documents in {retrieval_time:.2f} seconds")
-            for i, doc in enumerate(docs):
-                logger.debug(f"Document {i+1}: metadata={doc.metadata}, content={doc.page_content[:100]}...")
-        except Exception as e:
-            logger.error(f"Document retrieval error: {str(e)}", exc_info=True)
-            return jsonify({'error': 'Document retrieval failed'}), 500
+        app.logger.debug(f"Retrieving documents for question: {question}")
+        docs = retriever.invoke(question)
+        app.logger.info(f"Retrieved {len(docs)} documents in {time.time() - start_time:.2f}s")
 
-        # Conversation chain invocation
-        logger.debug("Invoking conversation chain...")
-        chain_start = time.time()
-        try:
-            result = conversation_chain.invoke({"question": question})
-            chain_time = time.time() - chain_start
-            logger.info(f"Conversation chain invocation took {chain_time:.2f} seconds")
-            logger.debug(f"Conversation chain result: {result}")
-            answer = result.get('answer', 'Sorry, I couldn’t find an answer.')
-            logger.debug(f"Generated answer: {answer[:100]}...")
-        except Exception as e:
-            logger.error(f"Conversation chain invocation error: {str(e)}", exc_info=True)
-            return jsonify({'error': 'Conversation chain failed'}), 500
+        app.logger.debug("Invoking conversation chain...")
+        result = conversation_chain.invoke({"question": question})
+        answer = result.get('answer', 'Sorry, I couldn’t find an answer.')
+        app.logger.info(f"Answer generated in {time.time() - start_time:.2f}s: {answer[:100]}...")
 
-        # Image processing
         image_url = None
-        if any(keyword in question.lower() for keyword in ["image", "picture", "photo"]):
-            logger.debug("Processing image query")
-            start_image = time.time()
-            try:
+        if "image" in question.lower() or "picture" in question.lower():
+            app.logger.debug("Processing image query")
+            for doc in docs:
+                if 'images.txt' in doc.metadata.get('source', '') and "/images/" in doc.page_content:
+                    image_name = doc.page_content.split("/images/")[1].split()[0].strip(',.')
+                    description = doc.page_content.split(':')[0].lower().strip()
+                    keywords = description.split() + [image_name.lower().replace('.jpg', '').replace('.png', '')]
+                    if any(keyword in question.lower() for keyword in keywords):
+                        if image_name not in session['used_images']:
+                            image_url = f"https://vector-bot-frontend.vercel.app/images/{image_name}"
+                            session['used_images'].append(image_name)
+                            app.logger.info(f"Selected image: {image_url}")
+                            break
+
+            if not image_url:
                 for doc in docs:
                     if 'images.txt' in doc.metadata.get('source', '') and "/images/" in doc.page_content:
                         image_name = doc.page_content.split("/images/")[1].split()[0].strip(',.')
-                        description = doc.page_content.split(':')[0].lower().strip()
-                        keywords = description.split() + [image_name.lower().replace('.jpg', '').replace('.png', '')]
-                        logger.debug(f"Checking image: {image_name}, keywords: {keywords}")
-                        if any(keyword in question.lower() for keyword in keywords):
-                            if image_name not in session.get('used_images', []):
-                                image_url = f"https://vector-bot-frontend.vercel.app/images/{image_name}"
-                                session['used_images'].append(image_name)
-                                logger.info(f"Selected image: {image_url}")
-                                break
-
-                if not image_url:
-                    logger.debug("No matching image found, trying fallback")
-                    for doc in docs:
-                        if 'images.txt' in doc.metadata.get('source', '') and "/images/" in doc.page_content:
-                            image_name = doc.page_content.split("/images/")[1].split()[0].strip(',.')
-                            if image_name not in session.get('used_images', []):
-                                image_url = f"https://vector-bot-frontend.vercel.app/images/{image_name}"
-                                session['used_images'].append(image_name)
-                                logger.info(f"Fallback image: {image_url}")
-                                break
-
-                if not image_url:
-                    logger.debug("Resetting used_images for image selection")
-                    session['used_images'] = []
-                    for doc in docs:
-                        if 'images.txt' in doc.metadata.get('source', '') and "/images/" in doc.page_content:
-                            image_name = doc.page_content.split("/images/")[1].split()[0].strip(',.')
+                        if image_name not in session['used_images']:
                             image_url = f"https://vector-bot-frontend.vercel.app/images/{image_name}"
                             session['used_images'].append(image_name)
-                            logger.info(f"Reset and selected image: {image_url}")
+                            app.logger.info(f"Fallback image: {image_url}")
                             break
-                logger.debug(f"Image processing took {time.time() - start_image:.2f} seconds")
-            except Exception as e:
-                logger.error(f"Image processing error: {str(e)}", exc_info=True)
 
-        # Prepare response
+            if not image_url:
+                app.logger.debug("Resetting used_images")
+                session['used_images'] = []
+                for doc in docs:
+                    if 'images.txt' in doc.metadata.get('source', '') and "/images/" in doc.page_content:
+                        image_name = doc.page_content.split("/images/")[1].split()[0].strip(',.')
+                        image_url = f"https://vector-bot-frontend.vercel.app/images/{image_name}"
+                        session['used_images'].append(image_name)
+                        app.logger.info(f"Reset and selected image: {image_url}")
+                        break
+
         response = {'answer': answer}
         if image_url:
             response['image_url'] = image_url
-        logger.debug(f"Prepared response: {response}")
-
-        # Log total time
-        total_time = time.time() - total_start
-        logger.info(f"Total time for /chat request: {total_time:.2f} seconds")
+        app.logger.debug(f"Returning response in {time.time() - start_time:.2f}s: {response}")
         return jsonify(response)
-
     except Exception as e:
-        total_time = time.time() - total_start
-        logger.error(f"Unexpected error in /chat after {total_time:.2f} seconds: {str(e)}", exc_info=True)
+        app.logger.error(f"Error in /chat after {time.time() - start_time:.2f}s: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/clear-session', methods=['GET'])
 def clear_session():
     start_time = time.time()
-    logger.debug("Clearing session")
     try:
+        app.logger.debug("Clearing session")
         session.clear()
-        logger.debug(f"Session cleared in {time.time() - start_time:.2f} seconds")
+        app.logger.debug(f"Session cleared in {time.time() - start_time:.2f}s")
         return jsonify({'message': 'Session cleared'})
     except Exception as e:
-        logger.error(f"Error in /clear-session after {time.time() - start_time:.2f} seconds: {str(e)}", exc_info=True)
+        app.logger.error(f"Error in /clear-session after {time.time() - start_time:.2f}s: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/')
 def index():
-    logger.debug("Root endpoint called")
+    app.logger.debug("Root endpoint called")
     return jsonify({'message': 'Welcome to Vector Bot Backend. Use /chat for queries.'}), 200
-
-@app.route('/debug')
-def debug():
-    logger.debug("Debug endpoint called")
-    return jsonify({
-        'cwd': os.getcwd(),
-        'chroma_path': os.path.abspath(os.path.join(project_root, 'chroma_db')),
-        'chroma_exists': os.path.exists(os.path.join(project_root, 'chroma_db')),
-        'chroma_file_exists': os.path.exists(os.path.join(project_root, 'chroma_db', 'chroma.sqlite3')),
-        'data_path': os.path.abspath(os.path.join(project_root, 'data')),
-        'data_exists': os.path.exists(os.path.join(project_root, 'data')),
-        'root_contents': os.listdir(project_root)
-    })
-
-@app.route('/data-files')
-def data_files():
-    logger.debug("Data files endpoint called")
-    data_path = os.path.join(project_root, "data")
-    try:
-        files = os.listdir(data_path)
-        logger.debug(f"Data files found: {files}")
-        return jsonify({"data_files": files})
-    except Exception as e:
-        logger.error(f"Error listing data files: {str(e)}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/memory')
-def memory():
-    logger.debug("Memory endpoint called")
-    return jsonify({'memory_percent': psutil.virtual_memory().percent})
-
-@app.route('/disk')
-def disk():
-    logger.debug("Disk endpoint called")
-    stat = os.statvfs('/')
-    total = stat.f_frsize * stat.f_blocks
-    free = stat.f_frsize * stat.f_bavail
-    return jsonify({"total_bytes": total, "free_bytes": free})
 
 if __name__ == '__main__':
     port = int(os.getenv("PORT", 5000))
-    logger.info(f"Starting Flask app on port {port}")
     app.run(host='0.0.0.0', port=port, debug=True)
