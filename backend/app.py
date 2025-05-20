@@ -241,19 +241,21 @@ except Exception as e:
     raise
 app.logger.info(f"Memory usage after embeddings: {psutil.virtual_memory().percent}%")
 
-# Specify Chroma DB path using a relative path
-chroma_db_path = os.getenv("CHROMA_DB_PATH", "../chroma_db")
+# Specify Chroma DB path using an absolute path
+chroma_db_path = os.getenv("CHROMA_DB_PATH", "/app/chroma_db")
 app.logger.debug(f"Resolved Chroma DB path: {os.path.abspath(chroma_db_path)}")
-if not os.path.exists(chroma_db_path):
-    app.logger.error(f"Chroma DB path {chroma_db_path} does not exist")
-    raise FileNotFoundError(f"Chroma DB path {chroma_db_path} does not exist")
 
-# Initialize Chroma DB with the existing directory
+# Initialize Chroma DB
 app.logger.debug("Initializing Chroma DB...")
 start_time = time.time()
 try:
+    os.makedirs(chroma_db_path, exist_ok=True)  # Ensure directory exists
     vectorstore = Chroma(persist_directory=chroma_db_path, embedding_function=embeddings)
     app.logger.debug(f"Chroma DB initialized in {time.time() - start_time:.2f} seconds")
+    if os.path.exists(os.path.join(chroma_db_path, "chroma.sqlite3")):
+        app.logger.info("Chroma DB file found")
+    else:
+        app.logger.warning("Chroma DB file not found, may be created on first use")
 except Exception as e:
     app.logger.error(f"Failed to initialize Chroma DB at {chroma_db_path}: {str(e)}", exc_info=True)
     raise
@@ -429,10 +431,11 @@ def index():
 def debug():
     return jsonify({
         'cwd': os.getcwd(),
-        'chroma_path': os.path.abspath('../chroma_db'),
-        'chroma_exists': os.path.exists('../chroma_db'),
-        'data_path': os.path.abspath('../data'),
-        'data_exists': os.path.exists('../data')
+        'chroma_path': os.path.abspath('/app/chroma_db'),
+        'chroma_exists': os.path.exists('/app/chroma_db'),
+        'chroma_file_exists': os.path.exists('/app/chroma_db/chroma.sqlite3'),
+        'data_path': os.path.abspath('/app/data'),
+        'data_exists': os.path.exists('/app/data')
     })
 
 @app.route('/memory')
