@@ -758,7 +758,7 @@
 
 
 
-#API error 500 Internal server error axioserror no logs whatever in tender 
+#UPLOADS with comunication using start comand  rm -rf /tmp/* && gunicorn backend.app:app --workers 1 --threads 1 --timeout 120 --log-level debug
 import logging
 import os
 import time
