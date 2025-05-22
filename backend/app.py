@@ -224,10 +224,11 @@ from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
+from langchain.chains import ConversationalRetrievalChain, StuffDocumentsChain
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
+from langchain.chains.llm import LLMChain
 from dotenv import load_dotenv
 import time
 
@@ -251,7 +252,7 @@ try:
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/paraphrase-MiniLM-L3-v2",
         model_kwargs={"device": "cpu"},
-        cache_folder="/opt/render/.cache/huggingface"  # Persist cache
+        cache_folder="/opt/render/.cache/huggingface"
     )
 except Exception as e:
     logger.error(f"Failed to load embeddings: {str(e)}", exc_info=True)
@@ -264,6 +265,7 @@ if not os.path.exists(chroma_db_path):
     raise FileNotFoundError(f"Chroma DB path {chroma_db_path} does not exist")
 
 logger.debug("Initializing Chroma DB...")
+os.environ["ANONYMIZED_TELEMETRY"] = "False"  # Disable telemetry
 try:
     vectorstore = Chroma(persist_directory=chroma_db_path, embedding_function=embeddings)
 except Exception as e:
@@ -287,10 +289,45 @@ logger.debug("Setting up memory and retriever...")
 memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
 retriever = vectorstore.as_retriever(search_kwargs={"k": 1})
 
-# Define prompt template
-prompt_template = """...[same as original]..."""
-prompt = PromptTemplate(
-    template=prompt_template,
+# Define prompt template for combining documents
+combine_docs_prompt_template = """Use the following pieces of context to answer the question. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+{context}
+
+Question: {question}
+Answer: """
+combine_docs_prompt = PromptTemplate(
+    template=combine_docs_prompt_template,
+    input_variables=["context", "question"]
+)
+
+# Create LLMChain for combining documents
+combine_docs_llm_chain = LLMChain(
+    llm=llm,
+    prompt=combine_docs_prompt
+)
+
+# Create StuffDocumentsChain
+combine_docs_chain = StuffDocumentsChain(
+    llm_chain=combine_docs_llm_chain,
+    document_variable_name="context"
+)
+
+# Define prompt template for the conversational chain
+conversational_prompt_template = """You are a helpful assistant. Given the chat history and context, provide a concise and accurate answer to the question.
+
+Chat History:
+{chat_history}
+
+Context:
+{context}
+
+Question:
+{question}
+
+Answer: """
+conversational_prompt = PromptTemplate(
+    template=conversational_prompt_template,
     input_variables=["chat_history", "context", "question"]
 )
 
@@ -299,8 +336,9 @@ conversation_chain = ConversationalRetrievalChain.from_llm(
     llm=llm,
     retriever=retriever,
     memory=memory,
-    return_source_documents=False,
-    combine_docs_chain_kwargs={"prompt": prompt}
+    combine_docs_chain=combine_docs_chain,
+    combine_docs_chain_kwargs={"prompt": conversational_prompt},
+    return_source_documents=False
 )
 
 @app.route('/health')
@@ -342,7 +380,7 @@ def chat():
                     keywords = description.split() + [image_name.lower().replace('.jpg', '').replace('.png', '')]
                     if any(keyword in question.lower() for keyword in keywords):
                         if image_name not in session['used_images']:
-                            image_url = f"/images/{image_name}"  # Serve from frontend
+                            image_url = f"/images/{image_name}"
                             session['used_images'].append(image_name)
                             logger.info(f"Selected image: {image_url}")
                             break
