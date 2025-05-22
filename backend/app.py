@@ -223,12 +223,14 @@ import os
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain, StuffDocumentsChain
-from langchain_chroma import Chroma
+from langchain_core.runnables import RunnableSequence
+from langchain_core.prompts import PromptTemplate
+from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.prompts import PromptTemplate
-from langchain.chains.llm import LLMChain
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain.chains import create_retrieval_chain, create_history_aware_retriever
+from langchain.chains.combine_documents import create_stuff_documents_chain
 from dotenv import load_dotenv
 import time
 
@@ -285,60 +287,55 @@ except Exception as e:
     logger.error(f"Failed to initialize LLM: {str(e)}", exc_info=True)
     raise
 
-logger.debug("Setting up memory and retriever...")
-memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+logger.debug("Setting up retriever and chains...")
 retriever = vectorstore.as_retriever(search_kwargs={"k": 1})
 
-# Define prompt template for combining documents
-combine_docs_prompt_template = """Use the following pieces of context to answer the question. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+# Define prompt for history-aware retriever
+history_aware_prompt = PromptTemplate(
+    input_variables=["chat_history", "input"],
+    template="Given the conversation history:\n{chat_history}\n\nUser input: {input}\n\nGenerate a standalone question that incorporates relevant context from the history."
+)
+
+# Create history-aware retriever
+history_aware_retriever = create_history_aware_retriever(
+    llm=llm,
+    retriever=retriever,
+    prompt=history_aware_prompt
+)
+
+# Define prompt for combining documents
+combine_docs_prompt = PromptTemplate(
+    input_variables=["context", "question"],
+    template="""Use the following pieces of context to answer the question. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
 {context}
 
 Question: {question}
 Answer: """
-combine_docs_prompt = PromptTemplate(
-    template=combine_docs_prompt_template,
-    input_variables=["context", "question"]
 )
 
-# Create LLMChain for combining documents
-combine_docs_llm_chain = LLMChain(
+# Create document combination chain
+combine_docs_chain = create_stuff_documents_chain(
     llm=llm,
     prompt=combine_docs_prompt
 )
 
-# Create StuffDocumentsChain
-combine_docs_chain = StuffDocumentsChain(
-    llm_chain=combine_docs_llm_chain,
-    document_variable_name="context"
+# Create retrieval chain
+retrieval_chain = create_retrieval_chain(
+    history_aware_retriever,
+    combine_docs_chain
 )
 
-# Define prompt template for the conversational chain
-conversational_prompt_template = """You are a helpful assistant. Given the chat history and context, provide a concise and accurate answer to the question.
+# Set up chat history
+chat_history = ChatMessageHistory()
 
-Chat History:
-{chat_history}
-
-Context:
-{context}
-
-Question:
-{question}
-
-Answer: """
-conversational_prompt = PromptTemplate(
-    template=conversational_prompt_template,
-    input_variables=["chat_history", "context", "question"]
-)
-
-logger.debug("Creating conversational chain...")
-conversation_chain = ConversationalRetrievalChain.from_llm(
-    llm=llm,
-    retriever=retriever,
-    memory=memory,
-    combine_docs_chain=combine_docs_chain,
-    combine_docs_chain_kwargs={"prompt": conversational_prompt},
-    return_source_documents=False
+# Create conversational chain with history
+conversation_chain = RunnableWithMessageHistory(
+    runnable=retrieval_chain,
+    get_session_history=lambda session_id: chat_history,
+    input_messages_key="question",
+    history_messages_key="chat_history",
+    output_messages_key="answer"
 )
 
 @app.route('/health')
@@ -366,7 +363,10 @@ def chat():
         logger.info(f"Retrieved {len(docs)} documents in {time.time() - start_time:.2f}s")
 
         logger.debug("Invoking conversation chain...")
-        result = conversation_chain.invoke({"question": question})
+        result = conversation_chain.invoke(
+            {"question": question},
+            config={"configurable": {"session_id": "default"}}
+        )
         answer = result.get('answer', 'Sorry, I couldn’t find an answer.')
         logger.info(f"Answer generated in {time.time() - start_time:.2f}s: {answer[:100]}...")
 
